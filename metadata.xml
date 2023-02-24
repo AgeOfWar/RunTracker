@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+    <name>[F9] Run Tracker</name>
+    <directory>runtracker</directory>
+    <id>2937286285</id>
+    <description>[h1][b]Run Tracker[/b][/h1]
+
+[h2][b]Introduction[/b][/h2]
+
+Run Tracker is a mod to that allows to track general and specific data of every standard character.
+
+[h2][b]Installing[/b][/h2]
+
+Click on the &quot;Subscribe&quot; button, which will cause Steam to automatically download the mod when you open the game.
+
+[h2][b]Usage[/b][/h2]
+
+Press F9 in game to open the statistics menu and change settings.
+
+made by AgeOfWar</description>
+    <version>1.1</version>
+    <visibility>Public</visibility>
+    <tag id="Lua"/>
+</metadata>
