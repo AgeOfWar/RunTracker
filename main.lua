@@ -467,12 +467,16 @@ mod:AddCallback(ModCallbacks.MC_POST_RENDER, function()
 
         if editLayout then
             if KeyboardTriggered(Keyboard.KEY_DOWN) or KeyboardTriggered(Keyboard.KEY_S) then
-                mod.data.hudOffset = mod.data.hudOffset + 12.2
-                SaveData()
+                if mod.data.hudOffset < 233 then
+                    mod.data.hudOffset = mod.data.hudOffset + 12.2
+                    SaveData()
+                end
             end
             if KeyboardTriggered(Keyboard.KEY_UP) or KeyboardTriggered(Keyboard.KEY_W) then
-                mod.data.hudOffset = mod.data.hudOffset - 12.2
-                SaveData()
+                if mod.data.hudOffset > 184 then
+                    mod.data.hudOffset = mod.data.hudOffset - 12.2
+                    SaveData()
+                end
             end
             if KeyboardTriggered(Keyboard.KEY_RIGHT) or KeyboardTriggered(Keyboard.KEY_D) then
                 if mod.data.hudData == "globalData.streak" then
@@ -535,6 +539,13 @@ mod:AddCallback(ModCallbacks.MC_POST_RENDER, function()
         return
     end
     local hudoffset = Options.HUDOffset * Vector(20, 12)
+    if Isaac.GetPlayer(0):GetPlayerType() == PlayerType.PLAYER_JACOB then
+        if mod.data.hudOffset < 214 then
+            hudoffset = hudoffset + Vector(0, 30)
+        else
+            hudoffset = hudoffset + Vector(0, 5.6)
+        end
+    end
     hudSprite:Render(Vector(hudoffset.X, hudoffset.Y + mod.data.hudOffset), Vector(0, 0), Vector(0, 0))
     local data = mod.data
     for path in string.gmatch(mod.data.hudData, "[^.]+") do
