@@ -89,6 +89,7 @@ mod.gameModes = {
     [Difficulty.DIFFICULTY_GREED] = "Greed",
     [Difficulty.DIFFICULTY_GREEDIER] = "Greedier"
 }
+mod.warnTime = 0
 
 local function SaveData()
     Isaac.SaveModData(mod, json.encode(mod.data))
@@ -98,14 +99,17 @@ local function ResetData()
     local currentPlayerType = nil
     local currentDifficulty = nil
     local hudOffset = 196
-    local hudData = "globalData.streak"
+    local hudData = "globalData.longestStreak"
+    local openStatsMenuKey = Keyboard.KEY_F9
     if mod.data then
         currentPlayerType = mod.data.currentPlayerType
         currentDifficulty = mod.data.currentDifficulty
         hudOffset = mod.data.hudOffset
         hudData = mod.data.hudData
+        openStatsMenuKey = mod.data.openStatsMenuKey or Keyboard.KEY_F9
     end
     mod.data = {
+        openStatsMenuKey = openStatsMenuKey,
         hudOffset = hudOffset,
         hudData = hudData,
         currentPlayerType = currentPlayerType,
@@ -172,6 +176,10 @@ end
 local function GetSaveData()
     if Isaac.HasModData(mod) then
         mod.data = json.decode(Isaac.LoadModData(mod))
+        if not mod.data.openStatsMenuKey then
+            mod.data.openStatsMenuKey = Keyboard.KEY_F9
+            SaveData()
+        end
     else
         ResetData()
     end
@@ -439,8 +447,13 @@ mod:AddCallback(ModCallbacks.MC_POST_RENDER, function()
     local editLayout = mod.statsMenuOpen and ButtonPressed(Keyboard.KEY_LEFT_SHIFT) and not ButtonPressed(Keyboard.KEY_LEFT_CONTROL)
 
     if not isPaused then
-        if KeyboardTriggered(Keyboard.KEY_F9) then
+        if KeyboardTriggered(mod.data.openStatsMenuKey) then
             ToggleStatsMenu()
+        end
+
+        if mod.warnTime > 0 then
+            DrawString("Run Tracker will be enabled from the next run", 100, ScreenHelper.GetScreenBottomRight(0).Y - 64, KColor(1, 1, 1, math.min(mod.warnTime / 10, 1) - 0.5))
+            mod.warnTime = mod.warnTime - 1
         end
     end
 
@@ -486,6 +499,8 @@ mod:AddCallback(ModCallbacks.MC_POST_RENDER, function()
                 elseif mod.data.hudData == "globalData.longestStreak" then
                     mod.data.hudData = "playerData.longestStreak"
                 elseif mod.data.hudData == "playerData.longestStreak" then
+                    mod.data.hudData = "globalData.wins"
+                elseif mod.data.hudData == "globalData.wins" then
                     mod.data.hudData = "playerData.wins"
                 elseif mod.data.hudData == "playerData.wins" then
                     mod.data.hudData = "disabled"
@@ -503,8 +518,10 @@ mod:AddCallback(ModCallbacks.MC_POST_RENDER, function()
                     mod.data.hudData = "playerData.streak"
                 elseif mod.data.hudData == "playerData.longestStreak" then
                     mod.data.hudData = "globalData.longestStreak"
-                elseif mod.data.hudData == "playerData.wins" then
+                elseif mod.data.hudData == "globalData.wins" then
                     mod.data.hudData = "playerData.longestStreak"
+                elseif mod.data.hudData == "playerData.wins" then
+                    mod.data.hudData = "globalData.wins"
                 elseif mod.data.hudData == "disabled" then
                     mod.data.hudData = "globalData.streak"
                 else
@@ -547,28 +564,39 @@ mod:AddCallback(ModCallbacks.MC_POST_RENDER, function()
         end
     end
     hudSprite:Render(Vector(hudoffset.X, hudoffset.Y + mod.data.hudOffset), Vector(0, 0), Vector(0, 0))
-    local data = mod.data
-    for path in string.gmatch(mod.data.hudData, "[^.]+") do
-        if path == "disabled" then
-            data = nil
-        elseif path == "playerData" then
-            data = data.playerData[tostring(mod.data.currentPlayerType or Isaac.GetPlayer(0):GetPlayerType())][tostring(game.Difficulty)]
-        elseif path == "globalData" then
-            data = data.globalData[tostring(game.Difficulty)]
-        else
----@diagnostic disable-next-line: cast-local-type
-            data = data[path]
+    local data = nil
+    local d = tostring(game.Difficulty)
+    local p = tostring(mod.data.currentPlayerType or Isaac.GetPlayer(0):GetPlayerType())
+    if mod.data.hudData == "globalData.streak" then
+        data = mod.data.globalData[d].streak
+    elseif mod.data.hudData == "playerData.streak" then
+        data = mod.data.playerData[p][d].streak
+    elseif mod.data.hudData == "globalData.longestStreak" then
+        local streak = mod.data.globalData[d].streak
+        if streak < 0 then
+            streak = 0
         end
-        if data == nil then break end
+        data = streak .. "/" .. mod.data.globalData[d].longestStreak
+    elseif mod.data.hudData == "playerData.longestStreak" then
+        local streak = mod.data.playerData[p][d].streak
+        if streak < 0 then
+            streak = 0
+        end
+        data = streak .. "/" .. mod.data.playerData[p][d].longestStreak
+    elseif mod.data.hudData == "globalData.wins" then
+        data = GetSumPlayerData(game.Difficulty, "wins") .. "-" .. GetSumPlayerData(game.Difficulty, "deaths")
+    elseif mod.data.hudData == "playerData.wins" then
+        data = mod.data.playerData[p][d].wins .. "-" .. mod.data.playerData[p][d].deaths
     end
     if data ~= nil or mod.data.hudData == "disabled" then
         if editLayout then
             local hudData = {
                 ["globalData.streak"] = "streak (all characters)",
                 ["playerData.streak"] = "streak (this character)",
-                ["globalData.longestStreak"] = "longest streak (all characters)",
-                ["playerData.longestStreak"] = "longest streak (this character)",
-                ["playerData.wins"] = "wins (this character)"
+                ["globalData.longestStreak"] = "streak / longest streak (all characters)",
+                ["playerData.longestStreak"] = "streak / longest streak (this character)",
+                ["globalData.wins"] = "wins - deaths (all characters)",
+                ["playerData.wins"] = "wins - deaths (this character)"
             }
             DrawString(tostring(data or "") .. "  < " .. (hudData[mod.data.hudData] or mod.data.hudData) .. " >", hudoffset.X + 16, hudoffset.Y + mod.data.hudOffset + 2, KColor(1, 1, 1, 0.5), hudFont)
         else
@@ -579,19 +607,47 @@ end)
 
 mod:AddCallback(ModCallbacks.MC_POST_GAME_STARTED, function(_, isContinued)
     GetSaveData()
+    if ModConfigMenu then
+        local openMenuKeyboardSetting = ModConfigMenu.AddKeyboardSetting(
+            "Run Tracker",
+            "OpenMenuKeyboard",
+            mod.data.openStatsMenuKey,
+            "Open Menu",
+            true,
+            "Choose what button on your keyboard will open Run Tracker Menu."
+        )
+        local oldOnChange = openMenuKeyboardSetting.OnChange
+        openMenuKeyboardSetting.OnChange = function (currentValue)
+            local value = oldOnChange(currentValue)
+            mod.data.openStatsMenuKey = currentValue
+            SaveData()
+            return value
+        end
+    end
+
     local game = Game()
     if not isContinued or game.Challenge ~= Challenge.CHALLENGE_NULL then -- New Game
         if mod.data.currentPlayerType ~= nil then
             local data = mod.data.playerData[tostring(mod.data.currentPlayerType)][tostring(mod.data.currentDifficulty)]
             data.resets = data.resets + 1
         end
-        mod.data.currentPlayerType = Isaac.GetPlayer(0):GetPlayerType()
-        mod.data.currentDifficulty = game.Difficulty
+        if game.Challenge == Challenge.CHALLENGE_NULL then
+            mod.data.currentPlayerType = Isaac.GetPlayer(0):GetPlayerType()
+            mod.data.currentDifficulty = game.Difficulty
+        else
+            mod.data.currentPlayerType = nil
+            mod.data.currentDifficulty = nil
+        end
         SaveData()
-    elseif mod.data.currentDifficulty ~= game.Difficulty then
-        mod.data.currentPlayerType = nil
-        mod.data.currentDifficulty = nil
-        SaveData()
+    else
+        if mod.data.currentDifficulty ~= game.Difficulty then
+            mod.data.currentPlayerType = nil
+            mod.data.currentDifficulty = nil
+            SaveData()
+        end
+        if mod.data.currentPlayerType == nil then
+            mod.warnTime = 600
+        end
     end
 end)
 
