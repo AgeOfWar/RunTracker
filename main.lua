@@ -95,6 +95,24 @@ local function SaveData()
     Isaac.SaveModData(mod, json.encode(mod.data))
 end
 
+if ModConfigMenu then
+    local openMenuKeyboardSetting = ModConfigMenu.AddKeyboardSetting(
+        "Run Tracker",
+        "OpenMenuKeyboard",
+        mod.data.openStatsMenuKey,
+        "Open Menu",
+        true,
+        "Choose what button on your keyboard will open Run Tracker Menu."
+    )
+    local oldOnChange = openMenuKeyboardSetting.OnChange
+    openMenuKeyboardSetting.OnChange = function (currentValue)
+        local value = oldOnChange(currentValue)
+        mod.data.openStatsMenuKey = currentValue
+        SaveData()
+        return value
+    end
+end
+
 local function ResetData()
     local currentPlayerType = nil
     local currentDifficulty = nil
@@ -607,24 +625,6 @@ end)
 
 mod:AddCallback(ModCallbacks.MC_POST_GAME_STARTED, function(_, isContinued)
     GetSaveData()
-    if ModConfigMenu then
-        local openMenuKeyboardSetting = ModConfigMenu.AddKeyboardSetting(
-            "Run Tracker",
-            "OpenMenuKeyboard",
-            mod.data.openStatsMenuKey,
-            "Open Menu",
-            true,
-            "Choose what button on your keyboard will open Run Tracker Menu."
-        )
-        local oldOnChange = openMenuKeyboardSetting.OnChange
-        openMenuKeyboardSetting.OnChange = function (currentValue)
-            local value = oldOnChange(currentValue)
-            mod.data.openStatsMenuKey = currentValue
-            SaveData()
-            return value
-        end
-    end
-
     local game = Game()
     if not isContinued or game.Challenge ~= Challenge.CHALLENGE_NULL then -- New Game
         if mod.data.currentPlayerType ~= nil then
