@@ -90,27 +90,10 @@ mod.gameModes = {
     [Difficulty.DIFFICULTY_GREEDIER] = "Greedier"
 }
 mod.warnTime = 0
+mod.configSetup = false
 
 local function SaveData()
     Isaac.SaveModData(mod, json.encode(mod.data))
-end
-
-if ModConfigMenu then
-    local openMenuKeyboardSetting = ModConfigMenu.AddKeyboardSetting(
-        "Run Tracker",
-        "OpenMenuKeyboard",
-        mod.data.openStatsMenuKey,
-        "Open Menu",
-        true,
-        "Choose what button on your keyboard will open Run Tracker Menu."
-    )
-    local oldOnChange = openMenuKeyboardSetting.OnChange
-    openMenuKeyboardSetting.OnChange = function (currentValue)
-        local value = oldOnChange(currentValue)
-        mod.data.openStatsMenuKey = currentValue
-        SaveData()
-        return value
-    end
 end
 
 local function ResetData()
@@ -625,6 +608,25 @@ end)
 
 mod:AddCallback(ModCallbacks.MC_POST_GAME_STARTED, function(_, isContinued)
     GetSaveData()
+    if ModConfigMenu and not mod.configSetup then
+        local openMenuKeyboardSetting = ModConfigMenu.AddKeyboardSetting(
+            "Run Tracker",
+            "OpenMenuKeyboard",
+            mod.data.openStatsMenuKey,
+            "Open Menu",
+            true,
+            "Choose what button on your keyboard will open Run Tracker Menu."
+        )
+        local oldOnChange = openMenuKeyboardSetting.OnChange
+        openMenuKeyboardSetting.OnChange = function (currentValue)
+            local value = oldOnChange(currentValue)
+            mod.data.openStatsMenuKey = currentValue
+            SaveData()
+            return value
+        end
+        mod.configSetup = true
+    end
+
     local game = Game()
     if not isContinued or game.Challenge ~= Challenge.CHALLENGE_NULL then -- New Game
         if mod.data.currentPlayerType ~= nil then
