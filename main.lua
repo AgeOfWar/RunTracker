@@ -367,28 +367,29 @@ end
 
 local function RenderStatsMenu()
     local center = ScreenHelper.GetScreenCenter()
+    local offset = center - Vector(245,135)
 
     statsMenuSprite:Render(center, Vector(0,0), Vector(0,0))
-    DrawTitle("Statistics", 265, 17, titleColor)
+    DrawTitle("Statistics", offset.X + 265, offset.Y + 17, titleColor)
     local slot = 0
     if mod.statsMenuSelectedCharacter <= 19 then
         for i = 0, 19 do
             local player = mod.players[i]
             if player then
-                DrawString(player, 53, 33 + slot * 12, i == mod.statsMenuSelectedCharacter and selectedColor or unselectedColor)
+                DrawString(player, offset.X + 53, offset.Y + 33 + slot * 12, i == mod.statsMenuSelectedCharacter and selectedColor or unselectedColor)
                 slot = slot + 1
             end
         end
-        cursorSpriteRight:Render(Vector(160, 135), Vector(0,0), Vector(0,0))
+        cursorSpriteRight:Render(offset + Vector(160, 135), Vector(0,0), Vector(0,0))
     else
         for i = 21, 38 do
             local player = mod.players[i]
             if player then
-                DrawString(player, 53, 33 + slot * 12, i == mod.statsMenuSelectedCharacter and selectedColor or unselectedColor)
+                DrawString(player, offset.X + 53, offset.Y + 33 + slot * 12, i == mod.statsMenuSelectedCharacter and selectedColor or unselectedColor)
                 slot = slot + 1
             end
         end
-        cursorSpriteLeft:Render(Vector(160, 135), Vector(0,0), Vector(0,0))
+        cursorSpriteLeft:Render(offset + Vector(160, 135), Vector(0,0), Vector(0,0))
     end
 
     local difficulty = mod.data.currentDifficulty or Game().Difficulty
@@ -416,30 +417,30 @@ local function RenderStatsMenu()
     local modePlayTime = modeData.playTime
     local modeAverageRunDuration = modeData.playTime / modeCompletedRuns
 
-    local globalOffset = 52
-    DrawString(mod.gameModes[difficulty] .. " (All characters)", 200, globalOffset - 2, textColor, font12)
-    DrawString("Winrate: " .. globalWinrateString, 200, globalOffset + 13, textColor)
-    DrawString("Play time: " .. TimeToString(globalPlayTime), 310, globalOffset + 13, textColor)
-    DrawString("Streak: " .. globalStreak, 200, globalOffset + 26, textColor)
-    DrawString("Longest streak: " .. globalLongestStreak, 310, globalOffset + 26, textColor)
-    DrawString("Wins: " .. globalWins, 200, globalOffset + 39, textColor)
-    DrawString("Deaths: " .. globalDeaths, 310, globalOffset + 39, textColor)
-    DrawString("Completed runs: " .. globalCompletedRuns, 200, globalOffset + 52, textColor)
-    DrawString("Resets: " .. globalResets, 200, globalOffset + 65, textColor)
+    local globalOffset = offset + Vector(200, 52)
+    DrawString(mod.gameModes[difficulty] .. " (All characters)", globalOffset.X, globalOffset.Y - 2, textColor, font12)
+    DrawString("Winrate: " .. globalWinrateString, globalOffset.X, globalOffset.Y + 13, textColor)
+    DrawString("Play time: " .. TimeToString(globalPlayTime), globalOffset.X + 110, globalOffset.Y + 13, textColor)
+    DrawString("Streak: " .. globalStreak, globalOffset.X, globalOffset.Y + 26, textColor)
+    DrawString("Longest streak: " .. globalLongestStreak, globalOffset.X + 110, globalOffset.Y + 26, textColor)
+    DrawString("Wins: " .. globalWins, globalOffset.X, globalOffset.Y + 39, textColor)
+    DrawString("Deaths: " .. globalDeaths, globalOffset.X + 110, globalOffset.Y + 39, textColor)
+    DrawString("Completed runs: " .. globalCompletedRuns, globalOffset.X, globalOffset.Y + 52, textColor)
+    DrawString("Resets: " .. globalResets, globalOffset.X, globalOffset.Y + 65, textColor)
 
-    local modeOffset = 142
-    DrawString(mod.gameModes[difficulty] .. " (" .. mod.players[mod.statsMenuSelectedCharacter] .. ")", 200, modeOffset - 2, textColor, font12)
-    DrawString("Winrate: " .. modeWinrateString, 200, modeOffset + 13, textColor)
-    DrawString("Play time: " .. TimeToString(modePlayTime), 310, modeOffset + 13, textColor)
-    DrawString("Streak: " .. modeStreak, 200, modeOffset + 26, textColor)
-    DrawString("Longest streak: " .. modeLongestStreak, 310, modeOffset + 26, textColor)
-    DrawString("Wins: " .. modeWins, 200, modeOffset + 39, textColor)
-    DrawString("Deaths: " .. modeDeaths, 310, modeOffset + 39, textColor)
-    DrawString("Completed runs: " .. modeCompletedRuns, 200, modeOffset + 52, textColor)
-    DrawString("Resets: " .. modeResets, 200, modeOffset + 65, textColor)
-    DrawString("Average run duration: " .. TimeToString(modeAverageRunDuration), 200, modeOffset + 78, textColor)
+    local modeOffset = offset + Vector(200, 142)
+    DrawString(mod.gameModes[difficulty] .. " (" .. mod.players[mod.statsMenuSelectedCharacter] .. ")", modeOffset.X, modeOffset.Y - 2, textColor, font12)
+    DrawString("Winrate: " .. modeWinrateString, modeOffset.X, modeOffset.Y + 13, textColor)
+    DrawString("Play time: " .. TimeToString(modePlayTime), modeOffset.X + 110, modeOffset.Y + 13, textColor)
+    DrawString("Streak: " .. modeStreak, modeOffset.X, modeOffset.Y + 26, textColor)
+    DrawString("Longest streak: " .. modeLongestStreak, modeOffset.X + 110, modeOffset.Y + 26, textColor)
+    DrawString("Wins: " .. modeWins, modeOffset.X, modeOffset.Y + 39, textColor)
+    DrawString("Deaths: " .. modeDeaths, modeOffset.X + 110, modeOffset.Y + 39, textColor)
+    DrawString("Completed runs: " .. modeCompletedRuns, modeOffset.X, modeOffset.Y + 52, textColor)
+    DrawString("Resets: " .. modeResets, modeOffset.X, modeOffset.Y + 65, textColor)
+    DrawString("Average run duration: " .. TimeToString(modeAverageRunDuration), modeOffset.X, modeOffset.Y + 78, textColor)
 
-    DrawString("Hold SHIFT to modify HUD", 200, 248, hintColor)
+    DrawString("Hold SHIFT to modify HUD", modeOffset.X, modeOffset.Y + 106, hintColor)
 end
 
 mod:AddCallback(ModCallbacks.MC_POST_RENDER, function()
@@ -481,7 +482,7 @@ mod:AddCallback(ModCallbacks.MC_POST_RENDER, function()
 
         if editLayout then
             if KeyboardTriggered(Keyboard.KEY_DOWN) or KeyboardTriggered(Keyboard.KEY_S) then
-                if mod.data.hudOffset < 233 then
+                if mod.data.hudOffset < 340 then
                     mod.data.hudOffset = mod.data.hudOffset + 12.2
                     SaveData()
                 end
